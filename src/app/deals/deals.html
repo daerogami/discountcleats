@@ -74,9 +74,11 @@
 
       <label class="field" for="sort">
         Sort
-        <select id="sort" [value]="board.sort" (change)="onSort($event)">
+        <select id="sort" (change)="onSort($event)">
           @for (option of sorts; track option.id) {
-            <option [value]="option.id">{{ option.label }}</option>
+            <option [value]="option.id" [selected]="option.id === board.sort">
+              {{ option.label }}
+            </option>
           }
         </select>
       </label>

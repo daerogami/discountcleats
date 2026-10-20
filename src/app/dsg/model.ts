@@ -81,7 +81,7 @@ export interface BoardFilters {
 export const DEFAULT_FILTERS: BoardFilters = {
   minDiscount: 50,
   maxPrice: null,
-  sort: 'price-desc',
+  sort: 'discount-desc',
   query: '',
   productTypes: ['Cleats'],
   brands: [],
