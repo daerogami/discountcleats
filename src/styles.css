@@ -514,11 +514,35 @@ a.card:focus-visible {
   font-size: 0.88rem;
 }
 
+.filter-toggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.filter-launch {
+  cursor: pointer;
+}
+
+.filters-hide,
+.filter-scrim {
+  display: none;
+}
+
 @media (min-width: 861px) {
+  .filter-toggle,
+  .filter-launch,
+  .filter-scrim {
+    display: none;
+  }
+
   .rail {
     position: sticky;
     top: 12px;
-    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     overflow: auto;
   }
 }
@@ -528,8 +552,81 @@ a.card:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .board {
-    order: -1;
+  .filters {
+    display: contents;
+  }
+
+  .filter-launch {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    width: max-content;
+    margin-inline: auto;
+    padding: 12px 18px;
+    background: var(--lime);
+    color: var(--lime-ink);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .filter-launch:focus-visible {
+    outline-color: #fff;
+  }
+
+  .filter-toggle:checked ~ .filter-launch {
+    bottom: auto;
+    top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .filter-toggle:checked ~ .filter-launch .filters-show {
+    display: none;
+  }
+
+  .filter-toggle:checked ~ .filter-launch .filters-hide {
+    display: inline;
+  }
+
+  .filter-toggle:checked ~ .filter-scrim {
+    display: block;
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    background: rgba(8, 10, 7, 0.62);
+    cursor: pointer;
+  }
+
+  .rail {
+    position: fixed;
+    z-index: 30;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: min(82dvh, 720px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 180ms ease;
+  }
+
+  .filter-toggle:checked ~ .rail {
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  html:has(.filter-toggle:checked),
+  body:has(.filter-toggle:checked) {
+    overflow: hidden;
+  }
+
+  .colophon {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .banner {
@@ -555,7 +652,8 @@ a.card:focus-visible {
   }
 
   .stats dd,
-  .grid {
+  .grid,
+  .rail {
     transition: none;
   }
 }

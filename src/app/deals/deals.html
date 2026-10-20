@@ -48,209 +48,217 @@
 </header>
 
 <div class="layout">
-  <aside class="rail">
-    @let board = filters();
-    <h2>Filters</h2>
-
-    <label class="field" for="search">
-      Search
-      <input
-        id="search"
-        type="search"
-        maxlength="80"
-        autocomplete="off"
-        placeholder="Predator, Nike, indoor"
-        [value]="board.query"
-        (input)="onQuery($event)"
-      />
+  <div class="filters">
+    <input id="filter-sheet" class="filter-toggle" type="checkbox" />
+    <label class="filter-launch" for="filter-sheet">
+      <span class="filters-show">Filters</span>
+      <span class="filters-hide">Close</span>
     </label>
+    <label class="filter-scrim" for="filter-sheet" aria-hidden="true"></label>
+    <aside class="rail">
+      @let board = filters();
+      <h2>Filters</h2>
 
-    <label class="field" for="sort">
-      Sort
-      <select id="sort" [value]="board.sort" (change)="onSort($event)">
-        @for (option of sorts; track option.id) {
-          <option [value]="option.id">{{ option.label }}</option>
-        }
-      </select>
-    </label>
+      <label class="field" for="search">
+        Search
+        <input
+          id="search"
+          type="search"
+          maxlength="80"
+          autocomplete="off"
+          placeholder="Predator, Nike, indoor"
+          [value]="board.query"
+          (input)="onQuery($event)"
+        />
+      </label>
 
-    <label class="field" for="discount">
-      At least {{ board.minDiscount }}% off
-      <input
-        id="discount"
-        type="range"
-        min="0"
-        max="80"
-        step="5"
-        [value]="board.minDiscount"
-        (input)="onDiscount($event)"
-      />
-    </label>
-
-    <label class="field" for="max-price">
-      Max price
-      <input
-        id="max-price"
-        type="number"
-        inputmode="decimal"
-        min="0"
-        max="2000"
-        step="1"
-        placeholder="Any"
-        [value]="board.maxPrice ?? ''"
-        (input)="onMaxPrice($event)"
-      />
-    </label>
-
-    <fieldset>
-      <legend>Fit</legend>
-      <div class="chips" role="group" aria-label="Fit">
-        @for (group of sizeGroups; track group.id) {
-          <button
-            type="button"
-            class="chip"
-            [attr.aria-pressed]="board.sizeGroup === group.id"
-            (click)="setSizeGroup(group.id)"
-          >
-            {{ group.label }}
-          </button>
-        }
-      </div>
-      <label class="field" for="size">
-        {{
-          board.sizeGroup === 'kids'
-            ? 'Kids size'
-            : board.sizeGroup === 'womens'
-              ? "Women's size"
-              : board.sizeGroup === 'mens'
-                ? "Men's size"
-                : 'Size'
-        }}
-        <select
-          id="size"
-          [disabled]="board.sizeGroup === 'all'"
-          [value]="board.size ?? ''"
-          (change)="onSize($event)"
-        >
-          <option value="">Any size</option>
-          @for (size of sizeOptions(); track size.value) {
-            <option [value]="size.value">{{ sizeLabel(size.value) }}</option>
+      <label class="field" for="sort">
+        Sort
+        <select id="sort" [value]="board.sort" (change)="onSort($event)">
+          @for (option of sorts; track option.id) {
+            <option [value]="option.id">{{ option.label }}</option>
           }
         </select>
       </label>
-    </fieldset>
 
-    @if (surfaceChoices().length) {
+      <label class="field" for="discount">
+        At least {{ board.minDiscount }}% off
+        <input
+          id="discount"
+          type="range"
+          min="0"
+          max="80"
+          step="5"
+          [value]="board.minDiscount"
+          (input)="onDiscount($event)"
+        />
+      </label>
+
+      <label class="field" for="max-price">
+        Max price
+        <input
+          id="max-price"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="2000"
+          step="1"
+          placeholder="Any"
+          [value]="board.maxPrice ?? ''"
+          (input)="onMaxPrice($event)"
+        />
+      </label>
+
       <fieldset>
-        <legend>Surface</legend>
-        <div class="chips">
-          @for (choice of surfaceChoices(); track choice.value) {
+        <legend>Fit</legend>
+        <div class="chips" role="group" aria-label="Fit">
+          @for (group of sizeGroups; track group.id) {
             <button
               type="button"
               class="chip"
-              [attr.aria-pressed]="board.surfaces.includes(choice.value)"
-              (click)="toggle('surfaces', choice.value)"
+              [attr.aria-pressed]="board.sizeGroup === group.id"
+              (click)="setSizeGroup(group.id)"
             >
-              {{ choice.value }}
-              <span class="count">{{ choice.count }}</span>
+              {{ group.label }}
             </button>
           }
         </div>
+        <label class="field" for="size">
+          {{
+            board.sizeGroup === 'kids'
+              ? 'Kids size'
+              : board.sizeGroup === 'womens'
+                ? "Women's size"
+                : board.sizeGroup === 'mens'
+                  ? "Men's size"
+                  : 'Size'
+          }}
+          <select
+            id="size"
+            [disabled]="board.sizeGroup === 'all'"
+            [value]="board.size ?? ''"
+            (change)="onSize($event)"
+          >
+            <option value="">Any size</option>
+            @for (size of sizeOptions(); track size.value) {
+              <option [value]="size.value">{{ sizeLabel(size.value) }}</option>
+            }
+          </select>
+        </label>
       </fieldset>
-    }
 
-    @if (genderChoices().length) {
+      @if (surfaceChoices().length) {
+        <fieldset>
+          <legend>Surface</legend>
+          <div class="chips">
+            @for (choice of surfaceChoices(); track choice.value) {
+              <button
+                type="button"
+                class="chip"
+                [attr.aria-pressed]="board.surfaces.includes(choice.value)"
+                (click)="toggle('surfaces', choice.value)"
+              >
+                {{ choice.value }}
+                <span class="count">{{ choice.count }}</span>
+              </button>
+            }
+          </div>
+        </fieldset>
+      }
+
+      @if (genderChoices().length) {
+        <fieldset>
+          <legend>Who it's for</legend>
+          <div class="chips">
+            @for (choice of genderChoices(); track choice.value) {
+              <button
+                type="button"
+                class="chip"
+                [attr.aria-pressed]="board.genders.includes(choice.value)"
+                (click)="toggle('genders', choice.value)"
+              >
+                {{ choice.value }}
+              </button>
+            }
+          </div>
+        </fieldset>
+      }
+
       <fieldset>
-        <legend>Who it's for</legend>
+        <legend>Product</legend>
         <div class="chips">
-          @for (choice of genderChoices(); track choice.value) {
-            <button
-              type="button"
-              class="chip"
-              [attr.aria-pressed]="board.genders.includes(choice.value)"
-              (click)="toggle('genders', choice.value)"
-            >
-              {{ choice.value }}
-            </button>
-          }
-        </div>
-      </fieldset>
-    }
-
-    <fieldset>
-      <legend>Product</legend>
-      <div class="chips">
-        <button
-          type="button"
-          class="chip"
-          [attr.aria-pressed]="board.productTypes.length === 0"
-          (click)="patch({ productTypes: [] })"
-        >
-          All sale
-        </button>
-        @for (choice of productTypeChoices(); track choice.value) {
           <button
             type="button"
             class="chip"
-            [attr.aria-pressed]="board.productTypes.includes(choice.value)"
-            (click)="toggle('productTypes', choice.value)"
+            [attr.aria-pressed]="board.productTypes.length === 0"
+            (click)="patch({ productTypes: [] })"
           >
-            {{ choice.value }}
+            All sale
           </button>
-        }
-      </div>
-    </fieldset>
-
-    @if (brandChoices().length) {
-      <fieldset>
-        <legend>Brand</legend>
-        <div class="checks">
-          @for (choice of brandChoices(); track choice.value) {
-            <label class="check">
-              <input
-                type="checkbox"
-                [checked]="board.brands.includes(choice.value)"
-                (change)="toggle('brands', choice.value)"
-              />
-              <span>{{ choice.value }}</span>
-              <span class="count">{{ choice.count }}</span>
-            </label>
+          @for (choice of productTypeChoices(); track choice.value) {
+            <button
+              type="button"
+              class="chip"
+              [attr.aria-pressed]="board.productTypes.includes(choice.value)"
+              (click)="toggle('productTypes', choice.value)"
+            >
+              {{ choice.value }}
+            </button>
           }
         </div>
       </fieldset>
-    }
 
-    <details class="store">
-      <summary>Store {{ board.storeNumber }} · {{ board.zip }}</summary>
-      <label class="field" for="zip">
-        ZIP
-        <input
-          id="zip"
-          inputmode="numeric"
-          maxlength="5"
-          autocomplete="postal-code"
-          [value]="board.zip"
-          (change)="onZip($event)"
-        />
-      </label>
-      <label class="field" for="store-number">
-        Store number
-        <input id="store-number" [value]="board.storeNumber" (change)="onStoreNumber($event)" />
-      </label>
-      <label class="field" for="store-id">
-        Store id
-        <input
-          id="store-id"
-          inputmode="numeric"
-          [value]="board.storeId"
-          (change)="onStoreId($event)"
-        />
-      </label>
-      <p class="hint">Prices belong to one Dick's store. Defaults match the original search.</p>
-    </details>
+      @if (brandChoices().length) {
+        <fieldset>
+          <legend>Brand</legend>
+          <div class="checks">
+            @for (choice of brandChoices(); track choice.value) {
+              <label class="check">
+                <input
+                  type="checkbox"
+                  [checked]="board.brands.includes(choice.value)"
+                  (change)="toggle('brands', choice.value)"
+                />
+                <span>{{ choice.value }}</span>
+                <span class="count">{{ choice.count }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
 
-    <button type="button" class="reset" (click)="reset()" [disabled]="isDefault()">Reset</button>
-  </aside>
+      <details class="store">
+        <summary>Store {{ board.storeNumber }} · {{ board.zip }}</summary>
+        <label class="field" for="zip">
+          ZIP
+          <input
+            id="zip"
+            inputmode="numeric"
+            maxlength="5"
+            autocomplete="postal-code"
+            [value]="board.zip"
+            (change)="onZip($event)"
+          />
+        </label>
+        <label class="field" for="store-number">
+          Store number
+          <input id="store-number" [value]="board.storeNumber" (change)="onStoreNumber($event)" />
+        </label>
+        <label class="field" for="store-id">
+          Store id
+          <input
+            id="store-id"
+            inputmode="numeric"
+            [value]="board.storeId"
+            (change)="onStoreId($event)"
+          />
+        </label>
+        <p class="hint">Prices belong to one Dick's store. Defaults match the original search.</p>
+      </details>
+
+      <button type="button" class="reset" (click)="reset()" [disabled]="isDefault()">Reset</button>
+    </aside>
+  </div>
 
   <section
     id="board"
