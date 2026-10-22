@@ -384,18 +384,18 @@ select:disabled {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
+  overflow-anchor: none;
 }
 
 .card {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow: hidden;
   background: #12180f;
   border: 1px solid rgba(243, 246, 238, 0.08);
   color: inherit;
   text-decoration: none;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 430px;
 }
 
 a.card:hover,
@@ -405,6 +405,7 @@ a.card:focus-visible {
 
 .photo {
   position: relative;
+  flex-shrink: 0;
   aspect-ratio: 1;
   background: var(--photo);
 }
@@ -436,22 +437,33 @@ a.card:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
+  flex: none;
+  overflow: hidden;
   padding: 12px;
 }
 
-.brand {
+.brand,
+.seller {
+  height: 1.4em;
+  overflow: hidden;
   color: var(--lime);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.seller {
+  color: var(--muted);
 }
 
 .card h3 {
+  height: calc(1.4em * 3);
   letter-spacing: 0;
   text-transform: none;
   font-size: 1.02rem;
   font-weight: 600;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -461,6 +473,9 @@ a.card:focus-visible {
 .meta {
   display: flex;
   flex-wrap: wrap;
+  align-content: start;
+  height: calc(1.4em * 2 + 6px);
+  overflow: hidden;
   gap: 6px 10px;
   color: var(--muted);
   font-size: 0.86rem;
@@ -469,9 +484,11 @@ a.card:focus-visible {
 .price {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 10px;
+  align-content: start;
   align-items: baseline;
-  margin-top: auto;
+  height: calc(1.7rem * 1.4 * 2);
+  overflow: hidden;
+  gap: 6px 10px;
 }
 
 .now {
@@ -492,6 +509,8 @@ a.card:focus-visible {
 }
 
 .rating {
+  height: 1.4em;
+  overflow: hidden;
   color: var(--muted);
   font-size: 0.86rem;
   font-variant-numeric: tabular-nums;

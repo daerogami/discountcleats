@@ -2,10 +2,13 @@ import { ParamMap, Params } from '@angular/router';
 import {
   BoardFilters,
   DEFAULT_FILTERS,
+  DEFAULT_RETAILERS,
   Deal,
   FacetValue,
+  RetailerId,
   SortKey,
   activeAudiences,
+  isRetailer,
   isSizeGroup,
   isSortKey,
   matchesAudiences,
@@ -24,6 +27,7 @@ export function sanitize(input: Partial<BoardFilters> | null | undefined): Board
       ? source.sizeGroup
       : DEFAULT_FILTERS.sizeGroup;
   const size = typeof source.size === 'string' && source.size.trim() ? source.size.trim() : null;
+  const retailers = cleanRetailers(source.retailers);
   const zip =
     typeof source.zip === 'string' && /^\d{5}$/.test(source.zip) ? source.zip : DEFAULT_FILTERS.zip;
   const storeNumber =
@@ -47,6 +51,7 @@ export function sanitize(input: Partial<BoardFilters> | null | undefined): Board
     genders: uniqueStrings(source.genders),
     sizeGroup,
     size,
+    retailers,
     zip,
     storeNumber,
     storeId,
@@ -75,6 +80,7 @@ export function filtersFromParams(map: ParamMap): BoardFilters {
     sizeGroup: (map.get('fit') ??
       (map.get('size') ? 'mens' : undefined)) as BoardFilters['sizeGroup'],
     size: map.get('size'),
+    retailers: map.getAll('shop').filter(isRetailer),
     zip: map.get('zip') ?? undefined,
     storeNumber: map.get('store') ?? undefined,
     storeId: storeId == null ? undefined : Number(storeId),
@@ -95,6 +101,7 @@ export function serializeFilters(filters: BoardFilters): Params {
   if (filters.genders.length) params['gender'] = filters.genders;
   if (filters.sizeGroup !== DEFAULT_FILTERS.sizeGroup) params['fit'] = filters.sizeGroup;
   if (filters.size) params['size'] = filters.size;
+  if (!sameList(filters.retailers, DEFAULT_RETAILERS)) params['shop'] = filters.retailers;
   if (filters.zip !== DEFAULT_FILTERS.zip) params['zip'] = filters.zip;
   if (filters.storeNumber !== DEFAULT_FILTERS.storeNumber) params['store'] = filters.storeNumber;
   if (filters.storeId !== DEFAULT_FILTERS.storeId) params['storeId'] = filters.storeId;
@@ -223,6 +230,20 @@ function numberOr(value: unknown, fallback: number): number {
   const parsed =
     typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+/** Boards saved when these three shops were the full set still mean every shop. */
+const PRIOR_DEFAULT_RETAILERS = ['dicks', 'prosoccer', 'unisport'] as const;
+
+function cleanRetailers(value: unknown): RetailerId[] {
+  if (!Array.isArray(value) || value.length === 0) return [...DEFAULT_RETAILERS];
+  if (sameMembers(value, PRIOR_DEFAULT_RETAILERS)) return [...DEFAULT_RETAILERS];
+  const picked = DEFAULT_RETAILERS.filter((id) => value.includes(id));
+  return picked.length ? [...picked] : [...DEFAULT_RETAILERS];
+}
+
+function sameMembers(value: readonly unknown[], expected: readonly string[]): boolean {
+  return value.length === expected.length && expected.every((id) => value.includes(id));
 }
 
 function cleanMaxPrice(value: unknown): number | null {

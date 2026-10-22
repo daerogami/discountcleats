@@ -39,8 +39,28 @@ const SIZE_GROUP_AUDIENCE = {
 
 export type SortKey = 'price-desc' | 'price-asc' | 'discount-desc' | 'savings-desc' | 'rating-desc';
 
+export type RetailerId = 'dicks' | 'soccer' | 'prosoccer' | 'unisport';
+
+export const RETAILERS: { id: RetailerId; label: string }[] = [
+  { id: 'dicks', label: "Dick's" },
+  { id: 'soccer', label: 'Soccer.com' },
+  { id: 'prosoccer', label: 'ProSoccer' },
+  { id: 'unisport', label: 'Unisport' },
+];
+
+export const DEFAULT_RETAILERS: RetailerId[] = RETAILERS.map((retailer) => retailer.id);
+
+export function isRetailer(value: string): value is RetailerId {
+  return RETAILERS.some((retailer) => retailer.id === value);
+}
+
+export function retailerLabel(id: RetailerId): string {
+  return RETAILERS.find((retailer) => retailer.id === id)?.label ?? id;
+}
+
 export interface Deal {
   id: string;
+  retailer: RetailerId;
   name: string;
   brand: string;
   url: string;
@@ -73,6 +93,7 @@ export interface BoardFilters {
   genders: string[];
   sizeGroup: SizeGroup;
   size: string | null;
+  retailers: RetailerId[];
   zip: string;
   storeNumber: string;
   storeId: number;
@@ -89,6 +110,7 @@ export const DEFAULT_FILTERS: BoardFilters = {
   genders: [],
   sizeGroup: 'all',
   size: null,
+  retailers: [...DEFAULT_RETAILERS],
   zip: '37923',
   storeNumber: '4435',
   storeId: 15108,

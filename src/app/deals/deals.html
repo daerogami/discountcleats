@@ -4,7 +4,8 @@
   <p class="kicker">Soccer clearance</p>
   <h1>{{ siteName }}</h1>
   <p class="lede">
-    Dick's soccer sale, with the clutter removed. Deep discounts stay, the rest of the page doesn't.
+    Soccer cleats on sale at Dick's, Soccer.com, ProSoccer, and Unisport. Search a model to compare
+    it.
   </p>
   <dl
     class="stats"
@@ -59,6 +60,23 @@
       @let board = filters();
       <h2>Filters</h2>
 
+      <fieldset>
+        <legend>Stores</legend>
+        <div class="chips" role="group" aria-label="Stores">
+          @for (shop of retailers; track shop.id) {
+            <button
+              type="button"
+              class="chip"
+              [attr.aria-pressed]="board.retailers.includes(shop.id)"
+              (click)="toggleRetailer(shop.id)"
+            >
+              {{ shop.label }}
+            </button>
+          }
+        </div>
+        <p class="hint">Each store lists its own cleats. Search a model to compare prices.</p>
+      </fieldset>
+
       <label class="field" for="search">
         Search
         <input
@@ -75,8 +93,8 @@
       <label class="field" for="sort">
         Sort
         <select id="sort" (change)="onSort($event)">
-          @for (option of sorts; track option.id) {
-            <option [value]="option.id" [selected]="option.id === board.sort">
+          @for (option of sortChoices(); track option.id) {
+            <option [value]="option.id" [selected]="option.id === activeSort()">
               {{ option.label }}
             </option>
           }
@@ -271,11 +289,7 @@
     <div class="board-head">
       <h2>{{ heading() }}</h2>
       <p class="progress" role="status" [attr.aria-hidden]="status() === 'loading' ? null : 'true'">
-        @if (status() === 'loading' && total() > 0) {
-          Read {{ scanned() }} of {{ total() }}
-        } @else {
-          Calling Dick's catalog
-        }
+        {{ progressText() }}
       </p>
       <div class="meter" [class.active]="status() === 'loading'" [style.--pct]="meter()">
         <span class="sr-only">Loading catalog</span>
@@ -292,23 +306,39 @@
     @if (capped()) {
       <p class="hint">Showing the first {{ scanned() }} matches from this search.</p>
     }
+    @if (soccerCapped()) {
+      <p class="hint">
+        Showing the first {{ soccerListingCap }} shoes from Soccer.com's sale list.
+      </p>
+    }
 
     @if (visible().length) {
       <div
+        #window
         class="grid"
         [class.holding]="holdingPrevious()"
         [attr.inert]="holdingPrevious() ? '' : null"
+        [style.padding-top.px]="padTop()"
+        [style.padding-bottom.px]="padBottom()"
+        [style.grid-auto-rows.px]="rowHeight() || null"
       >
-        @for (deal of visible(); track deal.id; let index = $index) {
-          <a class="card" [href]="deal.url" target="_blank" rel="noopener noreferrer">
+        @for (deal of windowed(); track deal.id; let index = $index) {
+          <a
+            #dealCard
+            class="card"
+            [href]="deal.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            (keydown)="onCardKey($event, index)"
+          >
             <div class="photo">
               <img
                 [src]="deal.imageUrl"
                 alt=""
                 width="480"
                 height="480"
-                [attr.loading]="index < 4 ? 'eager' : 'lazy'"
-                [attr.fetchpriority]="index < 4 ? 'high' : 'low'"
+                [attr.loading]="absoluteIndex(index) < columnCount() ? 'eager' : 'lazy'"
+                [attr.fetchpriority]="absoluteIndex(index) < columnCount() ? 'high' : 'low'"
                 decoding="async"
                 (error)="useFallback($event, deal)"
               />
@@ -317,9 +347,7 @@
               </span>
             </div>
             <div class="body">
-              @if (deal.brand) {
-                <p class="brand">{{ deal.brand }}</p>
-              }
+              <p class="brand" [attr.aria-hidden]="deal.brand ? null : 'true'">{{ deal.brand }}</p>
               <h3>{{ deal.name }}</h3>
               <p class="meta">
                 @if (deal.audience) {
@@ -332,6 +360,7 @@
                   <span>{{ deal.colors[0] }}</span>
                 }
               </p>
+              <p class="seller">{{ retailerLabel(deal.retailer) }}</p>
               <p class="price">
                 <span class="now">{{ deal.price | currency }}</span>
                 @if (deal.listPrice > deal.price) {
@@ -341,11 +370,11 @@
                   >
                 }
               </p>
-              @if (deal.ratingCount > 0) {
-                <p class="rating">
+              <p class="rating" [attr.aria-hidden]="deal.ratingCount > 0 ? null : 'true'">
+                @if (deal.ratingCount > 0) {
                   {{ deal.rating | number: '1.1-1' }} · {{ deal.ratingCount }} reviews
-                </p>
-              }
+                }
+              </p>
             </div>
           </a>
         }
@@ -356,15 +385,19 @@
           <div class="card skeleton"></div>
         }
       </div>
-    } @else if (!error()) {
+    } @else if (summaryKnown() || !error()) {
       <div class="empty">
         <p>Nothing clears that bar.</p>
-        <p class="hint">Lower the discount, clear a size, or switch product type.</p>
+        <p class="hint">Lower the discount, clear a size, or turn on another store.</p>
       </div>
     }
   </section>
 </div>
 
 <footer class="colophon">
-  <p>Live prices from Dick's Sporting Goods. This site isn't affiliated with them.</p>
+  <p>
+    Dick's prices belong to one of their stores. Soccer.com, ProSoccer, and Unisport prices come
+    from their websites. Discount Cleats is not affiliated with, endorsed by, or sponsored by any of
+    them.
+  </p>
 </footer>

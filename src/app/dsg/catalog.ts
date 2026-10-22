@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
 import {
+  dropCatalog,
+  pruneCatalog,
+  readCatalog,
+  writeCatalog,
+  CATALOG_CACHE_MS,
+} from './catalog-cache';
+import {
   BoardFilters,
   Deal,
   FacetValue,
@@ -61,18 +68,32 @@ interface FacetVo {
 
 @Injectable({ providedIn: 'root' })
 export class DsgCatalog {
-  private readonly cache = new Map<string, CatalogSnapshot>();
+  private readonly cache = new Map<string, { savedAt: number; snapshot: CatalogSnapshot }>();
 
   cached(key: string): CatalogSnapshot | null {
     const hit = this.cache.get(key);
     if (!hit) return null;
+    if (Date.now() - hit.savedAt > CATALOG_CACHE_MS) {
+      this.cache.delete(key);
+      return null;
+    }
     this.cache.delete(key);
     this.cache.set(key, hit);
-    return hit;
+    return hit.snapshot;
+  }
+
+  async recall(key: string): Promise<CatalogSnapshot | null> {
+    const live = this.cached(key);
+    if (live) return live;
+    const stored = await readCatalog<CatalogSnapshot>(dicksCacheKey(key));
+    if (!stored) return null;
+    this.keep(key, stored.payload, stored.savedAt);
+    return stored.payload;
   }
 
   forget(key: string): void {
     this.cache.delete(key);
+    void dropCatalog(dicksCacheKey(key));
   }
 
   async load(
@@ -141,11 +162,19 @@ export class DsgCatalog {
   }
 
   private remember(key: string, snapshot: CatalogSnapshot): void {
+    const savedAt = Date.now();
+    this.keep(key, snapshot, savedAt);
+    void writeCatalog(dicksCacheKey(key), snapshot, savedAt).then(() => pruneCatalog('dicks:', 6));
+  }
+
+  private keep(key: string, snapshot: CatalogSnapshot, savedAt: number): void {
     this.cache.delete(key);
-    this.cache.set(key, snapshot);
-    if (this.cache.size <= 6) return;
-    const oldest = this.cache.keys().next().value;
-    if (oldest) this.cache.delete(oldest);
+    this.cache.set(key, { savedAt, snapshot });
+    while (this.cache.size > 6) {
+      const oldest = this.cache.keys().next().value;
+      if (!oldest) break;
+      this.cache.delete(oldest);
+    }
   }
 
   private async fetchPage(
@@ -188,6 +217,10 @@ interface PageResult {
   received: number;
   total: number;
   facets: Record<string, FacetValue[]>;
+}
+
+function dicksCacheKey(key: string): string {
+  return `dicks:${key}`;
 }
 
 function buildSearch(filters: BoardFilters, pageNumber: number) {
@@ -244,6 +277,7 @@ function toDeal(product: ProductVo, detail: ProductDetail | undefined): Deal | n
 
   return {
     id: String(product.parentCatentryId || product.catentryId || product.dsgSeoUrl),
+    retailer: 'dicks',
     name: product.name,
     brand: product.mfName || '',
     url: `https://www.dickssportinggoods.com${product.dsgSeoUrl}`,
